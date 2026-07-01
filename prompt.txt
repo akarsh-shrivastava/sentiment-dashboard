@@ -1,0 +1,22 @@
+You are a sentiment analysis engine. Analyze the customer review below and return ONLY a JSON object — no explanation, no markdown, no code fences, just raw JSON.
+
+Use exactly this schema:
+{
+  "sentiment": "Positive" | "Negative" | "Neutral" | "Mixed",
+  "confidence": <float between 0.0 and 1.0>,
+  "themes": [<list of short keyword strings, max 5>],
+  "positive_aspects": [<list of positive points mentioned, empty list if none>],
+  "negative_aspects": [<list of negative points mentioned, empty list if none>],
+  "summary": "<one sentence summary of the review, max 20 words>"
+}
+
+Rules:
+- sentiment must be exactly one of: Positive, Negative, Neutral, Mixed
+- confidence is your certainty about the sentiment label (not the review's tone)
+- themes are the topics discussed (e.g. "delivery speed", "product quality")
+- If no positives or negatives exist, return an empty list []
+- summary must be a single sentence under 20 words
+- Return ONLY the JSON object, nothing else
+
+Customer review:
+"""<user-review/>"""
