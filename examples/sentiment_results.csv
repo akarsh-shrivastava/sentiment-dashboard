@@ -1,0 +1,9 @@
+review,sentiment,confidence,themes,summary
+"Absolutely love this product, fast shipping and great quality!",Positive,98%,"product quality, shipping",The customer absolutely loves the product due to fast shipping and great quality.
+Terrible experience. Broke after one day and customer support was useless.,Negative,98%,"product durability, customer support","The product failed immediately, and customer support was completely ineffective."
+"It's okay, nothing special but gets the job done.",Mixed,90%,"product performance, satisfaction","The product is functional and satisfactory but unremarkable, offering no special features."
+Packaging was damaged but the product itself works fine. Mixed feelings.,Mixed,95%,"packaging, product functionality","Packaging was damaged, but the product works fine, resulting in mixed feelings."
+Best purchase I've made this year. Highly recommend to everyone.,Positive,99%,"purchase, recommendation",This is the best purchase of the year and highly recommended to all.
+Took 3 weeks to arrive and the size was completely wrong.,Negative,98%,"delivery time, product size",The customer experienced very long delivery time and incorrect product sizing.
+Decent quality for the price. Shipping was a bit slow but acceptable.,Mixed,90%,"product quality, value for money, shipping speed","The product offers decent quality for the price, though shipping was somewhat slow but acceptable."
+Outstanding customer service saved what could have been a bad experience.,Positive,98%,customer service,Outstanding customer service prevented a negative situation from occurring.
