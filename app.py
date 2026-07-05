@@ -115,40 +115,43 @@ with tab1:
         if not review_input.strip():
             st.warning("Please enter a review before analyzing.")
         else:
-            with st.spinner("Analyzing with Gemini..."):
+            with st.spinner("Analyzing..."):
                 result = get_sentiment(review_input)
 
-            st.divider()
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric(label="Sentiment", value=result["sentiment"])
-            with col2:
-                st.metric(label="Confidence", value=f"{result['confidence']:.0%}")
+            if result["sentiment"] == "Error":
+                st.error(f"Analysis failed: {result['summary']}")
+            else:
+                st.divider()
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric(label="Sentiment", value=result["sentiment"])
+                with col2:
+                    st.metric(label="Confidence", value=f"{result['confidence']:.0%}")
 
-            st.markdown(f"**Summary:** {result['summary']}")
-            st.divider()
+                st.markdown(f"**Summary:** {result['summary']}")
+                st.divider()
 
-            with st.expander("🏷️ Themes", expanded=True):
-                if result["themes"]:
-                    cols = st.columns(len(result["themes"]))
-                    for i, theme in enumerate(result["themes"]):
-                        cols[i].markdown(f"`{theme}`")
-                else:
-                    st.write("No themes identified.")
+                with st.expander("🏷️ Themes", expanded=True):
+                    if result["themes"]:
+                        cols = st.columns(len(result["themes"]))
+                        for i, theme in enumerate(result["themes"]):
+                            cols[i].markdown(f"`{theme}`")
+                    else:
+                        st.write("No themes identified.")
 
-            with st.expander("✅ Positive Aspects", expanded=True):
-                if result["positive_aspects"]:
-                    for item in result["positive_aspects"]:
-                        st.markdown(f"- {item}")
-                else:
-                    st.write("None mentioned.")
+                with st.expander("✅ Positive Aspects", expanded=True):
+                    if result["positive_aspects"]:
+                        for item in result["positive_aspects"]:
+                            st.markdown(f"- {item}")
+                    else:
+                        st.write("None mentioned.")
 
-            with st.expander("❌ Negative Aspects", expanded=True):
-                if result["negative_aspects"]:
-                    for item in result["negative_aspects"]:
-                        st.markdown(f"- {item}")
-                else:
-                    st.write("None mentioned.")
+                with st.expander("❌ Negative Aspects", expanded=True):
+                    if result["negative_aspects"]:
+                        for item in result["negative_aspects"]:
+                            st.markdown(f"- {item}")
+                    else:
+                        st.write("None mentioned.")
 
 
 with tab2:
@@ -157,11 +160,20 @@ with tab2:
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
     if uploaded_file:
-        df = pd.read_csv(uploaded_file)
+        try:
+            df = pd.read_csv(uploaded_file)
+        except Exception as e:
+            st.error(f"Could not read CSV file: {str(e)}")
+            st.stop()
 
         if "review" not in df.columns:
             st.error(f"CSV must have a column named `review`. Found columns: {list(df.columns)}")
+        elif df["review"].dropna().empty:
+            st.error("The `review` column is empty — nothing to analyze.")
         else:
+            df = df.dropna(subset=["review"])
+            df = df[df["review"].str.strip() != ""]
+
             st.success(f"Loaded {len(df)} reviews. Ready to analyze.")
             st.dataframe(df.head(3), use_container_width=True)
 
