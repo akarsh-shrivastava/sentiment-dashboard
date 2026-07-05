@@ -1,16 +1,16 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 import time
 from gemini_core import get_sentiment
 
-# --- Page config (must be first) ---
+
 st.set_page_config(
     page_title="Sentiment Analyzer",
     page_icon="🎯",
-    layout="centered"
+    layout="wide"
 )
 
-# --- Sidebar ---
 with st.sidebar:
     st.title("🎯 Sentiment Analyzer")
     st.markdown("Analyze customer reviews using Google Gemini AI.")
@@ -19,14 +19,87 @@ with st.sidebar:
     st.markdown("1. **Single Review** — paste text and click Analyze")
     st.markdown("2. **Bulk CSV** — upload a CSV with a `review` column")
     st.divider()
-    st.caption("Built with Streamlit + Google Gemini Flash")
 
-# --- Main area ---
+def render_charts(results_df):
+    st.subheader("📊 Dashboard")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        sentiment_counts = results_df["sentiment"].value_counts().reset_index()
+        sentiment_counts.columns = ["Sentiment", "Count"]
+
+        color_map = {
+            "Positive": "#2ecc71",
+            "Negative": "#e74c3c",
+            "Neutral":  "#95a5a6",
+            "Mixed":    "#f39c12"
+        }
+
+        fig1 = px.bar(
+            sentiment_counts,
+            x="Sentiment",
+            y="Count",
+            color="Sentiment",
+            color_discrete_map=color_map,
+            title="Sentiment Distribution",
+            text="Count"
+        )
+        fig1.update_traces(textposition="outside")
+        fig1.update_layout(showlegend=False, yaxis_title="Number of Reviews")
+        st.plotly_chart(fig1, use_container_width=True)
+
+    with col2:
+        confidence_numeric = (
+            results_df["confidence"]
+            .str.replace("%", "", regex=False)
+            .astype(float) / 100
+        )
+
+        fig2 = px.histogram(
+            x=confidence_numeric,
+            nbins=10,
+            title="Confidence Score Distribution",
+            labels={"x": "Confidence Score"},
+            color_discrete_sequence=["#3498db"]
+        )
+        fig2.update_layout(yaxis_title="Number of Reviews", bargap=0.1)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    all_themes = (
+        results_df["themes"]
+        .dropna()
+        .str.split(", ")
+        .explode()
+        .str.strip()
+        .value_counts()
+        .head(10)
+        .reset_index()
+    )
+    all_themes.columns = ["Theme", "Count"]
+
+    if not all_themes.empty:
+        fig3 = px.bar(
+            all_themes,
+            x="Count",
+            y="Theme",
+            orientation="h",
+            title="Top 10 Themes Across All Reviews",
+            text="Count",
+            color_discrete_sequence=["#9b59b6"]
+        )
+        fig3.update_traces(textposition="outside")
+        fig3.update_layout(yaxis={"categoryorder": "total ascending"})
+        st.plotly_chart(fig3, use_container_width=True)
+    else:
+        st.info("No themes found to display.")
+
+
 st.header("Customer Review Analyzer")
 
 tab1, tab2 = st.tabs(["Single Review", "Bulk CSV Upload"])
 
-# ── TAB 1: Single Review (same as Day 3) ──────────────────────────────────────
+
 with tab1:
     st.markdown("Paste a single customer review below to analyze its sentiment and extract key themes.")
 
@@ -44,13 +117,6 @@ with tab1:
         else:
             with st.spinner("Analyzing with Gemini..."):
                 result = get_sentiment(review_input)
-
-            sentiment_color = {
-                "Positive": "green",
-                "Negative": "red",
-                "Neutral": "gray",
-                "Mixed": "orange"
-            }
 
             st.divider()
             col1, col2 = st.columns(2)
@@ -84,7 +150,7 @@ with tab1:
                 else:
                     st.write("None mentioned.")
 
-# ── TAB 2: Bulk CSV Upload ─────────────────────────────────────────────────────
+
 with tab2:
     st.markdown("Upload a CSV file with a `review` column to analyze all reviews at once.")
 
@@ -93,12 +159,11 @@ with tab2:
     if uploaded_file:
         df = pd.read_csv(uploaded_file)
 
-        # Check the column exists
         if "review" not in df.columns:
             st.error(f"CSV must have a column named `review`. Found columns: {list(df.columns)}")
         else:
             st.success(f"Loaded {len(df)} reviews. Ready to analyze.")
-            st.dataframe(df.head(3), use_container_width=True)  # preview first 3 rows
+            st.dataframe(df.head(3), use_container_width=True)
 
             analyze_all_btn = st.button("Analyze All Reviews", type="primary")
 
@@ -107,14 +172,11 @@ with tab2:
                 progress_bar = st.progress(0, text="Starting analysis...")
 
                 for i, row in enumerate(df["review"]):
-                    # Update progress bar
                     progress = (i + 1) / len(df)
                     progress_bar.progress(progress, text=f"Analyzing review {i + 1} of {len(df)}...")
 
-                    # Call Gemini
                     result = get_sentiment(str(row))
 
-                    # Flatten the result for the table
                     results.append({
                         "review": row,
                         "sentiment": result["sentiment"],
@@ -123,17 +185,16 @@ with tab2:
                         "summary": result["summary"]
                     })
 
-                    # Small delay to avoid hitting Gemini rate limits
                     time.sleep(10)
 
-                progress_bar.empty()  # remove progress bar when done
+                progress_bar.empty()
                 st.success("Analysis complete!")
 
-                # Build results dataframe
                 results_df = pd.DataFrame(results)
+
+                st.subheader("📋 Results Table")
                 st.dataframe(results_df, use_container_width=True)
 
-                # Download button
                 csv_output = results_df.to_csv(index=False).encode("utf-8")
                 st.download_button(
                     label="⬇️ Download Results as CSV",
@@ -141,3 +202,6 @@ with tab2:
                     file_name="sentiment_results.csv",
                     mime="text/csv"
                 )
+
+                st.divider()
+                render_charts(results_df)
