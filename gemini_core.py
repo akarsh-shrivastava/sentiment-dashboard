@@ -16,20 +16,35 @@ client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 with open("prompt.txt") as f:
     prompt_temp = f.read()
 
-def get_sentiment(review):
+def get_sentiment(review, retries=3, delay=10):
     prompt = prompt_temp.replace("<user-review/>", review)
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
+    for attempt in range(retries):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+            res = response.text.strip()
+            if res.startswith("```"):
+                res = res.split("```")[1]
+                if res.startswith("json"):
+                    res = res[4:]
+                res = res.strip()
+            return json.loads(res)
 
-    res = response.text.strip()
-    if res.startswith("```"):
-        res = res.split("```")[1]
-        if res.startswith("json"):
-            res = res[4:]
-        res = res.strip()
-    res_dict = json.loads(res)
+        except Exception as e:
+            if attempt < retries-1:
+                time.sleep(delay)
+            else:
+                return {
+                    "sentiment": "Error",
+                    "confidence": 0.0,
+                    "themes": [],
+                    "positive_aspects": [],
+                    "negative_aspects": [],
+                    "summary": f"Analysis failed: {str(e)}"
+                }
+        
 
     return res_dict
