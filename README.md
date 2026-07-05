@@ -3,7 +3,23 @@
 An AI-powered web app that analyzes customer review sentiment using Google Gemini Flash. Built as part of an AI Engineer portfolio.
 
 ## Live Demo
-[Link to your Streamlit deployment — add this on Day 7]
+[Link to  Streamlit App](https://as-sentiment-dashboard.streamlit.app/)
+
+## Screenshots
+<table>
+  <tr>
+    <td><img src="screenshots/single-review.png" alt="Single Review" width="400"/></td>
+    <td><img src="screenshots/single-review-result.png" alt="Bulk Upload" width="400"/></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/bulk-review.png" alt="Results Table" width="400"/></td>
+    <td><img src="screenshots/bulk-review-table.png" alt="Sentiment Chart" width="400"/></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/bulk-review-dashboard-1.png" alt="Confidence Chart" width="400"/></td>
+    <td><img src="screenshots/bulk-review-dashboard-2.png" alt="Themes Chart" width="400"/></td>
+  </tr>
+</table>
 
 ## Features
 - **Single review analysis** — paste any customer review and get instant sentiment, confidence score, themes, and a one-line summary
